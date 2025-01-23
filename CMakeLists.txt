@@ -1,5 +1,6 @@
-cmake_minimum_required(VERSION 3.6 FATAL_ERROR)
-cmake_policy(VERSION 3.6)
+# 3.6 is the actual minimun. 3.14 as the upper policy limit avoids CMake deprecation warnings.
+cmake_minimum_required(VERSION 3.6...3.14 FATAL_ERROR)
+cmake_policy(VERSION 3.6...3.14)
 
 file(READ "glm/detail/setup.hpp" GLM_SETUP_FILE)
 string(REGEX MATCH "#define[ ]+GLM_VERSION_MAJOR[ ]+([0-9]+)" _ ${GLM_SETUP_FILE})
@@ -21,7 +22,7 @@ if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
 endif()
 
 option(GLM_BUILD_LIBRARY "Build dynamic/static library" ON)
-option(GLM_BUILD_TESTS "Build the test programs" ${GLM_IS_MASTER_PROJECT})
+option(GLM_BUILD_TESTS "Build the test programs" OFF)
 option(GLM_BUILD_INSTALL "Generate the install target" ${GLM_IS_MASTER_PROJECT})
 
 include(GNUInstallDirs)
@@ -149,6 +150,7 @@ option(GLM_ENABLE_SIMD_SSE4_1 "Enable SSE 4.1 optimizations" OFF)
 option(GLM_ENABLE_SIMD_SSE4_2 "Enable SSE 4.2 optimizations" OFF)
 option(GLM_ENABLE_SIMD_AVX "Enable AVX optimizations" OFF)
 option(GLM_ENABLE_SIMD_AVX2 "Enable AVX2 optimizations" OFF)
+option(GLM_ENABLE_SIMD_NEON "Enable ARM NEON optimizations" OFF)
 option(GLM_FORCE_PURE "Force 'pure' instructions" OFF)
 
 if(GLM_FORCE_PURE)
@@ -191,7 +193,7 @@ elseif(GLM_ENABLE_SIMD_SSE4_2)
 	elseif(CMAKE_CXX_COMPILER_ID MATCHES "Intel")
 		add_compile_options(/QxSSE4.2)
 	elseif((CMAKE_CXX_COMPILER_ID MATCHES "MSVC") AND NOT CMAKE_CL_64)
-		add_compile_options(/arch:SSE2) # VC doesn't support SSE4.2
+		add_compile_options(/arch:SSE4.2)
 	endif()
 	message(STATUS "GLM: SSE4.2 instruction set")
 
@@ -242,6 +244,10 @@ elseif(GLM_ENABLE_SIMD_SSE2)
 		add_compile_options(/arch:SSE2)
 	endif()
 	message(STATUS "GLM: SSE2 instruction set")
+elseif(GLM_ENABLE_SIMD_NEON)
+	add_definitions(-DGLM_FORCE_INTRINSICS)
+
+	message(STATUS "GLM: ARM NEON instruction set")
 endif()
 
 add_subdirectory(glm)
